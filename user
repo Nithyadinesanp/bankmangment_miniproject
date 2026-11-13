@@ -1,0 +1,52 @@
+
+import sqlite3
+
+con = sqlite3.connect("bank.db")
+cur = con.cursor()
+
+cur.execute("PRAGMA foreign_keys = ON")
+
+# Create User Login Table
+cur.execute("""CREATE TABLE IF NOT EXISTS user_login (user_id INTEGER PRIMARY KEY AUTOINCREMENT,account_no INTEGER UNIQUE,user_name TEXT UNIQUE,pass_word TEXT,FOREIGN KEY (account_no)REFERENCES account(account_no))""")
+
+con.commit()
+
+print("===== USER REGISTRATION =====")
+
+account_no = int(input("Enter Account Number: "))
+user_name = input("Enter Username: ")
+pass_word = input("Enter Password: ")
+
+# Check Account Number
+cur.execute(
+    "SELECT account_no FROM account WHERE account_no = ?",
+    (account_no,)
+)
+
+account = cur.fetchone()
+
+if account is None:
+    print("Account Not Found!")
+
+else:
+    try:
+        cur.execute("""INSERT INTO user_login(account_no, user_name, pass_word) VALUES (?, ?, ?)""", (account_no, user_name, pass_word))
+
+        con.commit()
+        print("\nUser Registration Successful!")
+
+    except sqlite3.IntegrityError:
+        print("Account Number or Username Already Registered!")
+
+# Display User Details
+cur.execute("""
+SELECT user_id, account_no, user_name
+FROM user_login
+""")
+
+print("\n===== REGISTERED USERS =====")
+
+for row in cur.fetchall():
+    print(row)
+
+con.close()

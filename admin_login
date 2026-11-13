@@ -1,0 +1,117 @@
+
+import sqlite3
+
+
+def show_details(table_name, title):
+
+    con = sqlite3.connect("bank.db")
+    cur = con.cursor()
+
+    cur.execute(f"PRAGMA table_info({table_name})")
+    columns = cur.fetchall()
+
+    if not columns:
+        print("\nTable not found!")
+        con.close()
+        return
+
+    # Do not display passwords
+    column_names = [
+        col[1] for col in columns
+        if "password" not in col[1].lower()
+    ]
+
+    cur.execute(f"SELECT * FROM {table_name}")
+    rows = cur.fetchall()
+
+    indexes = [
+        i for i, col in enumerate(columns)
+        if "password" not in col[1].lower()
+    ]
+
+    print("\n==========", title, "==========")
+
+    if not rows:
+        print("No records found.")
+    else:
+        print(" | ".join(column_names))
+        print("-" * 80)
+
+        for row in rows:
+            values = [str(row[i]) for i in indexes]
+            print(" | ".join(values))
+
+    con.close()
+    input("\nPress Enter to go back to Admin Dashboard...")
+
+
+def admin_dashboard():
+
+    while True:
+
+        print("\n====== ADMIN DASHBOARD ======")
+        print("1. Customer Details")
+        print("2. Account Details")
+        print("3. Transaction Details")
+        print("4. User Details")
+        print("5. Logout")
+
+        choice = input("\nEnter your choice: ")
+
+        if choice == "1":
+            show_details("customer", "CUSTOMER DETAILS")
+
+        elif choice == "2":
+            show_details("account", "ACCOUNT DETAILS")
+
+        elif choice == "3":
+            show_details("transactions", "TRANSACTION DETAILS")
+
+        elif choice == "4":
+            show_details("user_login", "USER DETAILS")
+
+        elif choice == "5":
+            print("\nAdmin Logged Out Successfully!")
+            break
+
+        else:
+            print("\nInvalid Choice! Please Try Again.")
+
+
+def admin_login():
+
+    con = sqlite3.connect("bank.db")
+    cur = con.cursor()
+
+    print("\n====== ADMIN LOGIN ======")
+
+    username = input("Enter Admin Username: ")
+    password = input("Enter Admin Password: ")
+
+    cur.execute(
+        "SELECT * FROM admin WHERE username=? AND password=?",
+        (username, password)
+    )
+
+    admin = cur.fetchone()
+    con.close()
+
+    if admin:
+        print("\nLogin Successful!")
+        print("Welcome Admin")
+
+        admin_dashboard()
+
+    else:
+        print("\nInvalid Username or Password!")
+
+
+while True:
+
+    admin_login()
+
+    again = input("\nDo you want to login again? (yes/no): ")
+
+    if again.lower() != "yes":
+        print("\nThank You!")
+        break

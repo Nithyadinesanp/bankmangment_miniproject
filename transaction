@@ -1,0 +1,102 @@
+import sqlite3
+
+con = sqlite3.connect("bank.db")
+cur = con.cursor()
+
+# Enable foreign key
+cur.execute("PRAGMA foreign_keys = ON")
+
+# Create Transaction Table
+cur.execute("""
+CREATE TABLE IF NOT EXISTS transactions (
+    transaction_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_no INTEGER,
+    transaction_type TEXT,
+    amount REAL,
+    transaction_date TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (account_no) REFERENCES account(account_no)
+)
+""")
+
+con.commit()
+
+print("===== BANK TRANSACTION PAGE =====")
+
+print("1. Deposit")
+print("2. Withdrawal")
+print("3. Transaction History")
+
+choice = input("Enter Your Choice: ")
+
+if choice == "1" or choice == "2":
+
+    account_no = int(input("Enter Account Number: "))
+    amount = float(input("Enter Amount: "))
+
+    # Check account
+    cur.execute(
+        "SELECT balance FROM account WHERE account_no = ?",
+        (account_no,)
+    )
+    result = cur.fetchone()
+
+    if result is None:
+        print("Account Not Found!")
+
+    elif amount <= 0:
+        print("Enter a Valid Amount!")
+
+    else:
+        balance = result[0]
+
+        if choice == "1":
+            transaction_type = "Deposit"
+            new_balance = balance + amount
+
+        else:
+            transaction_type = "Withdrawal"
+
+            if amount > balance:
+                print("Insufficient Balance!")
+                con.close()
+                exit()
+
+            new_balance = balance - amount
+
+        # Update account balance
+        cur.execute("""
+        UPDATE account
+        SET balance = ?
+        WHERE account_no = ?
+        """, (new_balance, account_no))
+
+        # Save transaction
+        cur.execute("""INSERT INTO transactions(account_no, transactions_type, amount)VALUES (?, ?, ?)""", (account_no, transaction_type, amount))
+
+        con.commit()
+
+        print("\n========Transaction Successful========")
+        print("Transaction Type:", transaction_type)
+        print("Transaction Amount:", amount)
+        print("Available Balance:", new_balance)
+
+elif choice == "3":
+
+    account_no = int(input("Enter Account Number: "))
+
+    cur.execute("""SELECT * FROM transactions WHERE account_no = ?ORDER BY transactions_id DESC""", (account_no,))
+
+    records = cur.fetchall()
+
+    print("\n===== TRANSACTION HISTORY =====")
+
+    if records:
+        for row in records:
+            print(row)
+    else:
+        print("No Transactions Found!")
+
+else:
+    print("Invalid Choice!")
+
+con.close()

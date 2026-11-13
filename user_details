@@ -1,0 +1,45 @@
+
+import sqlite3
+
+con = sqlite3.connect("bank.db")
+cur = con.cursor()
+
+print("===== USER DETAILS PAGE =====")
+
+account_no = int(input("Enter Account Number: "))
+
+cur.execute("""
+SELECT
+    u.user_id,
+    c.customer_id,
+    c.name,
+    a.account_no,
+    a.account_type,
+    u.user_name,
+    a.balance,
+    c.phone,
+    c.address
+FROM user_login u
+JOIN account a ON u.account_no = a.account_no
+JOIN customer c ON a.customer_id = c.customer_id
+WHERE a.account_no = ?
+""", (account_no,))
+
+user = cur.fetchone()
+
+if user:
+    print("\n===== CUSTOMER INFORMATION =====")
+    print("User ID       :", user[0])
+    print("Customer ID   :", user[1])
+    print("Customer Name :", user[2])
+    print("Account No    :", user[3])
+    print("Account Type  :", user[4])
+    print("Username      :", user[5])
+    print("Balance       :", user[6])
+    print("Phone Number  :", user[7])
+    print("Address       :", user[8])
+
+else:
+    print("User Details Not Found!")
+
+con.close()

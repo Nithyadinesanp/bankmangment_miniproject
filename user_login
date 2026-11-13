@@ -1,0 +1,118 @@
+
+import sqlite3
+
+
+def user_login():
+
+    print("\n====== USER LOGIN ======")
+
+    user_name = input("Enter Username: ")
+    pass_word = input("Enter Password: ")
+
+    con = sqlite3.connect("bank.db")
+    con.row_factory = sqlite3.Row
+    cur = con.cursor()
+
+    cur.execute("""
+        SELECT * FROM user_login
+        WHERE user_name=? AND pass_word=?
+    """, (user_name, pass_word))
+
+    user = cur.fetchone()
+
+    if user is None:
+        print("\nInvalid Username or Password!")
+        con.close()
+        return
+
+    print("\nLogin Successful!")
+    print("Welcome", user_name)
+
+    account_no = user["account_no"]
+
+    while True:
+
+        print("\n====== USER DASHBOARD ======")
+        print("1. My Personal Details")
+        print("2. My Account Details")
+        print("3. My Transaction Details")
+        print("4. Logout")
+
+        choice = input("\nEnter Your Choice: ")
+
+        if choice == "1":
+
+            cur.execute("""
+                SELECT c.*
+                FROM customer c
+                JOIN account a
+                ON c.customer_id = a.customer_id
+                WHERE a.account_no = ?
+            """, (account_no,))
+
+            customer = cur.fetchone()
+
+            print("\n====== PERSONAL DETAILS ======")
+
+            if customer:
+                for key in customer.keys():
+                    print(key, ":", customer[key])
+            else:
+                print("Customer details not found.")
+
+        elif choice == "2":
+
+            cur.execute("""
+                SELECT * FROM account
+                WHERE account_no = ?
+            """, (account_no,))
+
+            account = cur.fetchone()
+
+            print("\n====== ACCOUNT DETAILS ======")
+
+            if account:
+                for key in account.keys():
+                    print(key, ":", account[key])
+            else:
+                print("Account details not found.")
+
+        elif choice == "3":
+
+            cur.execute("""
+                SELECT * FROM transactions
+                WHERE account_no = ?
+            """, (account_no,))
+
+            transactions = cur.fetchall()
+
+            print("\n====== TRANSACTION DETAILS ======")
+
+            if transactions:
+                for transaction in transactions:
+                    for key in transaction.keys():
+                        print(key, ":", transaction[key])
+                    print("-------------------------")
+            else:
+                print("No transactions found.")
+
+        elif choice == "4":
+
+            print("\nUser Logged Out Successfully!")
+            break
+
+        else:
+            print("\nInvalid Choice! Try Again.")
+
+    con.close()
+
+
+while True:
+
+    user_login()
+
+    again = input("\nDo you want to login again? (yes/no): ")
+
+    if again.lower() != "yes":
+        print("\nThank You!")
+        break

@@ -1,0 +1,27 @@
+import sqlite3
+#Database Connection
+con=sqlite3.Connection("bank.db")
+cur=con.cursor()
+#enable foreign key
+cur.execute("PRAGMA foreign_key =ON")
+#create account table
+cur.execute("""CREATE TABLE IF NOT EXISTS account(account_no INTEGER PRIMART KEY,customer_id INTEGER,account_type TEXT,balance REAL DEFAULT 0,FOREIGN KEY(customer_id)REFERENCES customer(customer_id))""")
+#get account details
+print("Account Creation")
+print("-----------------")
+account_no=int(input("Enter Account Number :"))
+customer_id=int(input("Enter Customer Id :"))
+account_type=input(input("Enter Account Type(Saving/Current) :"))
+balance=float(input("Enter Initial Deposit Amount :"))
+#insert Account details
+cur.execute("""INSERT INTO account(account_no,customer_id,account_type,balance)VALUES(?,?,?,?)""",(account_no,customer_id,account_type,balance))
+con.commit()
+print("\nAccount Creation Successfully ")
+#display account details
+print("\n Account Details")
+print("===================")
+cur.execute("SELECT *FROM account")
+data=cur.fetchall()
+for row in data:
+    print(row)
+con.close()

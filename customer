@@ -1,0 +1,25 @@
+import sqlite3
+#Database connection
+con=sqlite3.connect("bank.db")
+cur=con.cursor()
+#Create customer Table
+cur.execute("""CREATE TABLE IF NOT EXISTS customer(customer_id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,age INEGER,phone TEXT,address TEXT)""")
+#customer details
+print("Customer Registration")
+print("---------------------")
+name=input("Enter Customer Name :")
+age=int(input("Enter Customer Age :"))
+phone=input("Enter Phone Number :")
+address=input("Enter Address :")
+#insert db
+cur.execute("""INSERT INTO customer(name,age,phone,address)VALUES(?,?,?,?)""",(name,age,phone,address))
+con.commit()
+print("\n Customer Details Add Successfully")
+#display customer details
+print("\n -----CUSTOMER DETAILS-----")
+print("------------------------------")
+cur.execute("SELECT * FROM customer")
+data=cur.fetchall()
+for row in data:
+    print(row)
+con.close()
